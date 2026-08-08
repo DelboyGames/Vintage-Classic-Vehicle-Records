@@ -95,7 +95,14 @@ let bugReportWindow;
 function createBugReportWindow(){
   if(bugReportWindow && !bugReportWindow.isDestroyed()){ bugReportWindow.focus(); return bugReportWindow; }
   bugReportWindow=new BrowserWindow({width:760,height:820,minWidth:650,minHeight:700,show:false,autoHideMenuBar:true,icon:path.join(__dirname,'..','..','assets','app.ico'),title:'Report a Bug – Vintage & Classic Vehicle Records',parent:mainWindow,modal:false,webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true,preload:path.join(__dirname,'..','preload','preload.js'),spellcheck:true}});
-  bugReportWindow.loadFile(path.join(__dirname,'..','renderer','bug-report.html'));
+  const bugReportPath=path.join(__dirname,'..','renderer','bug-report.html');
+  bugReportWindow.loadFile(bugReportPath);
+  bugReportWindow.webContents.on('did-fail-load',(_event,errorCode,errorDescription)=>{
+    if(bugReportWindow && !bugReportWindow.isDestroyed()){
+      bugReportWindow.show();
+      dialog.showErrorBox('Report a Bug',`The bug-report window could not be loaded.\n\n${errorDescription} (${errorCode})`);
+    }
+  });
   bugReportWindow.once('ready-to-show',()=>bugReportWindow.show());
   bugReportWindow.on('closed',()=>{bugReportWindow=null;});
   return bugReportWindow;
@@ -106,7 +113,13 @@ function setupAutoUpdater(){
   autoUpdater.autoInstallOnAppQuit=false;
   autoUpdater.on('update-available',info=>mainWindow?.webContents.send('updates:available',{version:info.version}));
   autoUpdater.on('update-not-available',info=>mainWindow?.webContents.send('updates:not-available',{version:info.version||app.getVersion()}));
-  autoUpdater.on('download-progress',progress=>mainWindow?.webContents.send('updates:progress',{percent:Number(progress.percent||0),transferred:Number(progress.transferred||0),total:Number(progress.total||0),bytesPerSecond:Number(progress.bytesPerSecond||0),mode:'installed'}));
+  autoUpdater.on('download-progress',progress=>mainWindow?.webContents.send('updates:progress',{
+    percent:Number(progress.percent||0),
+    transferred:Number(progress.transferred||0),
+    total:Number(progress.total||0),
+    bytesPerSecond:Number(progress.bytesPerSecond||0),
+    mode:'installed'
+  }));
   autoUpdater.on('update-downloaded',info=>mainWindow?.webContents.send('updates:downloaded',{version:info.version}));
   autoUpdater.on('error',err=>mainWindow?.webContents.send('updates:error',{error:err.message}));
 }
@@ -117,10 +130,17 @@ function scheduleStartupUpdateCheck(){
       if(isPortableMode){
         const r=await getJson('https://api.github.com/repos/DelboyGames/vintage-classic-car-records/releases/latest');
         const latest=String(r.tag_name||r.name||'').replace(/^v/i,'');
-        if(latest && latest!==app.getVersion()) mainWindow?.webContents.send('updates:startup-available',{version:latest,url:r.html_url||null});
-        else mainWindow?.webContents.send('updates:startup-not-available',{version:app.getVersion()});
-      }else{ await autoUpdater.checkForUpdates(); }
-    }catch(e){ mainWindow?.webContents.send('updates:startup-error',{error:e.message}); }
+        if(latest && latest!==app.getVersion()){
+          mainWindow?.webContents.send('updates:startup-available',{version:latest,url:r.html_url||null});
+        }else{
+          mainWindow?.webContents.send('updates:startup-not-available',{version:app.getVersion()});
+        }
+      }else{
+        await autoUpdater.checkForUpdates();
+      }
+    }catch(e){
+      mainWindow?.webContents.send('updates:startup-error',{error:e.message});
+    }
   },2500);
 }
 function createWindow() {
@@ -254,16 +274,39 @@ ipcMain.handle('usb:verify-copy',async(_e,root)=>{
 ipcMain.handle('usb:open-folder',async(_e,p)=>{const err=await shell.openPath(p);return{ok:!err,error:err||null};});
 
 function getJson(url){return new Promise((resolve,reject)=>{https.get(url,{headers:{'User-Agent':'VintageClassicVehicleRecords/7.0','Accept':'application/vnd.github+json'}},res=>{let data='';res.on('data',c=>data+=c);res.on('end',()=>{try{if(res.statusCode>=400)throw new Error(`GitHub returned ${res.statusCode}`);resolve(JSON.parse(data));}catch(e){reject(e);}});}).on('error',reject);});}
-function downloadFile(url,dest,onProgress){return new Promise((resolve,reject)=>{const request=https.get(url,{headers:{'User-Agent':'VintageClassicVehicleRecords/7.1','Accept':'application/octet-stream'}},res=>{if(res.statusCode>=300&&res.statusCode<400&&res.headers.location){res.resume();return downloadFile(res.headers.location,dest,onProgress).then(resolve,reject);}if(res.statusCode!==200){res.resume();return reject(new Error(`Download failed with HTTP ${res.statusCode}`));}const total=Number(res.headers['content-length']||0);let transferred=0;const out=fs.createWriteStream(dest);res.on('data',chunk=>{transferred+=chunk.length;onProgress?.(total?Math.min(100,transferred/total*100):0,transferred,total);});res.on('error',reject);out.on('error',reject);out.on('finish',()=>{out.close();resolve(dest);});res.pipe(out);});request.on('error',reject);});}
+function downloadFile(url,dest,onProgress){return new Promise((resolve,reject)=>{
+  const request=https.get(url,{headers:{'User-Agent':'VintageClassicVehicleRecords/7.1','Accept':'application/octet-stream'}},res=>{
+    if(res.statusCode>=300&&res.statusCode<400&&res.headers.location){
+      res.resume();
+      return downloadFile(res.headers.location,dest,onProgress).then(resolve,reject);
+    }
+    if(res.statusCode!==200){
+      res.resume();
+      return reject(new Error(`Download failed with HTTP ${res.statusCode}`));
+    }
+    const total=Number(res.headers['content-length']||0);
+    let transferred=0;
+    const out=fs.createWriteStream(dest);
+    res.on('data',chunk=>{
+      transferred+=chunk.length;
+      onProgress?.(total?Math.min(100,transferred/total*100):0,transferred,total);
+    });
+    res.on('error',reject);
+    out.on('error',reject);
+    out.on('finish',()=>{out.close();resolve(dest);});
+    res.pipe(out);
+  });
+  request.on('error',reject);
+});}
 ipcMain.handle('app:open-bug-report',async()=>{try{createBugReportWindow();return{ok:true};}catch(e){return{ok:false,error:e.message};}});
 ipcMain.handle('app:open-external',async(_e,url)=>{if(!/^https:\/\//i.test(String(url)))return{ok:false,error:'Only secure web links are allowed'};await shell.openExternal(url);return{ok:true};});
-ipcMain.handle('app:check-updates',async()=>{try{const r=await getJson('https://api.github.com/repos/DelboyGames/vintage-classic-car-records/releases/latest');const latest=String(r.tag_name||r.name||'').replace(/^v/i,'');const asset=(r.assets||[]).find(a=>/portable.*\.exe$/i.test(a.name)||/portable.*\.exe/i.test(a.name));if(!isPortableMode){try{await autoUpdater.checkForUpdates();}catch{}}return{ok:true,current:app.getVersion(),latest,url:r.html_url,name:r.name,published:r.published_at,portable:isPortableMode,portableAsset:asset?.browser_download_url||null,releaseApi:r.url};}catch(e){return{ok:false,current:app.getVersion(),error:e.message,portable:isPortableMode};}});
+ipcMain.handle('app:check-updates',async()=>{try{const apiUrl='https://api.github.com/repos/DelboyGames/vintage-classic-car-records/releases/latest';let r;try{r=await getJson(apiUrl);}catch(e){if(/GitHub returned 404/i.test(e.message||''))return{ok:true,current:app.getVersion(),latest:app.getVersion(),url:'https://github.com/DelboyGames/vintage-classic-car-records/releases',name:'',published:null,portable:isPortableMode,portableAsset:null,noRelease:true};throw e;}const latest=String(r.tag_name||r.name||'').replace(/^v/i,'');const asset=(r.assets||[]).find(a=>/portable.*\.exe$/i.test(a.name));if(!isPortableMode){try{await autoUpdater.checkForUpdates();}catch{}}return{ok:true,current:app.getVersion(),latest:latest||app.getVersion(),url:r.html_url,name:r.name,published:r.published_at,portable:isPortableMode,portableAsset:asset?.browser_download_url||null,releaseApi:r.url};}catch(e){return{ok:false,current:app.getVersion(),error:e.message,portable:isPortableMode};}});
 ipcMain.handle('app:create-bug-report',async(_e,payload)=>{try{const d=payload.includeDiagnostics?await (async()=>{const result=db.exec('PRAGMA integrity_check');return{appVersion:app.getVersion(),electron:process.versions.electron,windows:`${process.platform} ${process.arch}`,integrity:result?.[0]?.values?.[0]?.[0]||'unknown',schema:6};})():null;const body=[`## Description\n${payload.description||''}`,`## Steps to reproduce\n${payload.steps||''}`,`## Expected result\n${payload.expected||''}`,`## Actual result\n${payload.actual||''}`,d?`## Diagnostics\n\`\`\`json\n${JSON.stringify(d,null,2)}\n\`\`\``:'',`## Privacy confirmation\nNo vehicle records, photographs, documents, addresses, registration numbers or database files are attached automatically.`].filter(Boolean).join('\n\n');const params=new URLSearchParams({title:`[Bug] ${payload.title||'Issue in Collector Edition'}`,body,labels:'bug'});const url=`https://github.com/DelboyGames/vintage-classic-car-records/issues/new?${params.toString()}`;await shell.openExternal(url);return{ok:true,url};}catch(e){return{ok:false,error:e.message};}});
 ipcMain.handle('vehicle:open-window',async(_e,vehicleId)=>{try{if(!vehicleId)throw new Error('Vehicle ID is required');createVehicleWindow(String(vehicleId));return{ok:true};}catch(e){return{ok:false,error:e.message};}});
 ipcMain.handle('app:update-install',async()=>{
   try{
     if(!isPortableMode){
-      if(!app.isPackaged)return{ok:false,error:'Updates are only available in the installed build.'};
+      if(!app.isPackaged)return{ok:false,error:'Updates are only available in the installed Windows build.'};
       await autoUpdater.downloadUpdate();
       return{ok:true,mode:'installed',downloadStarted:true};
     }
@@ -273,7 +316,9 @@ ipcMain.handle('app:update-install',async()=>{
     const asset=(release.assets||[]).find(a=>/portable.*\.exe$/i.test(a.name));
     if(!asset)throw new Error('No portable EXE was found in the latest GitHub release.');
     const temp=path.join(app.getPath('temp'),`Vintage-Classic-Vehicle-Records-${latest}-portable-update.exe`);
-    await downloadFile(asset.browser_download_url,temp,(percent,transferred,total)=>mainWindow?.webContents.send('updates:progress',{percent,transferred,total,bytesPerSecond:0,mode:'portable'}));
+    await downloadFile(asset.browser_download_url,temp,(percent,transferred,total)=>mainWindow?.webContents.send('updates:progress',{
+      percent,transferred,total,bytesPerSecond:0,mode:'portable'
+    }));
     const current=process.execPath;
     const script=path.join(app.getPath('temp'),`vcc-update-${Date.now()}.cmd`);
     const cmd=`@echo off\r\ntimeout /t 2 /nobreak >nul\r\ncopy /Y "${temp}" "${current}" >nul\r\nstart "" "${current}"\r\ndel /f /q "${temp}" >nul 2>&1\r\ndel /f /q "%~f0" >nul 2>&1\r\n`;

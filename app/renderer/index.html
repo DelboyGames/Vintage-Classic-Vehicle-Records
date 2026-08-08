@@ -559,7 +559,7 @@
     .usb-progress>div{height:100%;width:0;background:var(--success);transition:width .25s ease}
     .usb-result{padding:12px;border-radius:10px;background:#edf7f1;border:1px solid #9bc7ad;display:none}
 
-    .status-groups{display:grid;gap:14px;margin-top:14px}.status-group{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.55);overflow:hidden}.status-group h3{margin:0;padding:9px 12px;font-size:.9rem}.status-group .vehicle-list{padding:8px;margin:0}.status-pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;font-weight:700;background:#e8eee9;color:#275a45}.status-pill.restoration{background:#f6e7c9;color:#8a5b12}.status-pill.stored{background:#e4e7eb;color:#4f5b67}.vehicle-window-btn{margin-left:auto}.footer-bar{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:12px 18px;margin-top:16px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}.footer-bar button{border:0;background:transparent;color:var(--accent);font-weight:700;cursor:pointer}.update-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.update-progress{margin-top:16px}.update-progress-track{height:16px;background:var(--line);border-radius:999px;overflow:hidden}.update-progress-fill{height:100%;width:0;background:var(--success);transition:width .2s ease}.update-progress-label{display:flex;justify-content:space-between;margin-top:6px;color:var(--muted);font-size:.85rem}
+    .status-groups{display:grid;gap:14px;margin-top:14px}.status-group{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.55);overflow:hidden}.status-group h3{margin:0;padding:9px 12px;font-size:.9rem}.status-group .vehicle-list{padding:8px;margin:0}.status-pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;font-weight:700;background:#e8eee9;color:#275a45}.status-pill.restoration{background:#f6e7c9;color:#8a5b12}.status-pill.stored{background:#e4e7eb;color:#4f5b67}.vehicle-window-btn{margin-left:auto}.footer-bar{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:12px 18px;margin-top:16px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}.footer-bar button{border:0;background:transparent;color:var(--accent);font-weight:700;cursor:pointer}.update-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.update-error{border-color:#d9a0a0!important;background:#fff0f0!important;color:#7a2020!important}
     /* Version 7 commercial interface */
     :root{--v7-bg:#eef2f4;--v7-surface:rgba(255,255,255,.88);--v7-green:#0d5748;--v7-green2:#073b31;--v7-gold:#c5a554;--v7-text:#17211f;--v7-muted:#64716e}
     body{font-family:"Segoe UI Variable","Segoe UI",Arial,sans-serif;color:var(--v7-text);background:linear-gradient(135deg,#e8eef0,#f7f8f7);transition:background .2s,color .2s}
@@ -1022,7 +1022,7 @@
 
 
   <div id="saveStatus" class="save-status">SQLite database ready</div>
-  <footer class="footer-bar"><span>Vintage &amp; Classic Vehicle Records – Collector Edition v7.1.0</span><button type="button" id="footerBugBtn">🐛 Report a Bug</button><button type="button" id="footerUpdateBtn">↻ Check for Updates</button></footer>
+  <footer class="footer-bar"><span>Vintage &amp; Classic Vehicle Records – Collector Edition v7.1.1</span><button type="button" id="footerBugBtn">🐛 Report a Bug</button><button type="button" id="footerUpdateBtn">↻ Check for Updates</button></footer>
   <div class="modal" id="accessibilityModal"><div class="modal-card"><div class="panel-header"><h3>Accessibility & Display</h3><button class="close-btn" data-close="accessibilityModal">&times;</button></div><div class="panel-body"><label><input id="largeTextToggle" type="checkbox" style="width:auto"> Larger text</label><label style="margin-top:12px"><input id="highContrastToggle" type="checkbox" style="width:auto"> High contrast mode</label><div class="notice" style="margin-top:14px">Windows zoom shortcuts also work: Ctrl + Plus, Ctrl + Minus and Ctrl + 0.</div></div></div></div>
   <div class="modal" id="diagnosticsModal"><div class="modal-card"><div class="panel-header"><h3>Application Diagnostics</h3><button class="close-btn" data-close="diagnosticsModal">&times;</button></div><div class="panel-body"><div id="diagnosticsContent" class="diagnostics-grid"></div><div class="toolbar" style="margin-top:14px"><button class="btn" id="integrityCheckBtn">Run database integrity check</button><button class="btn secondary" id="recoveryCheckBtn">Check crash recovery</button></div></div></div></div>
 </div>
@@ -2146,6 +2146,11 @@
 
       currentVehicleId = id;
       closeModal("vehicleModal");
+      const nextRibbonAction = pendingRibbonAction;
+      pendingRibbonAction = null;
+      if(nextRibbonAction === 'maintenance') activeTab = 'history';
+      if(nextRibbonAction === 'restoration') activeTab = 'restoration';
+      if(nextRibbonAction === 'dossier') activeTab = 'reports';
       render();
     });
 
@@ -2445,47 +2450,157 @@
     }
     async function refreshCloudBackups(){const box=document.getElementById('cloudBackupList'); if(!box||!window.cloudAPI||!cloudSettings.folder)return; const files=await window.cloudAPI.listBackups(cloudSettings.folder); box.innerHTML=files.length?files.map(f=>`<article class="record"><div class="record-top"><div><strong>${esc(f.name)}</strong><div class="record-meta">${new Date(f.modified).toLocaleString()}</div></div><button type="button" class="btn secondary small" data-restore-cloud="${esc(f.path)}">Restore</button></div></article>`).join(''):'<div class="empty-state">No backups found in this folder.</div>'; box.querySelectorAll('[data-restore-cloud]').forEach(b=>b.onclick=async()=>{if(!confirm('Restore this backup? A local safety backup should be exported first.'))return; let pw=''; if(b.dataset.restoreCloud.endsWith('.vccenc')) pw=prompt('Enter the backup password:')||''; const r=await window.cloudAPI.readBackup(b.dataset.restoreCloud,pw); if(!r.ok)return alert('Restore failed: '+r.error); state=r.data; currentVehicleId=state.currentVehicleId||state.vehicles?.[0]?.id||null; saveState(); render(); closeModal('cloudModal');});}
     async function runScheduledCloudBackup(){if(!cloudSettings.folder||!window.cloudAPI)return; const last=cloudSettings.lastSuccess?new Date(cloudSettings.lastSuccess):null, now=new Date(); if(cloudSettings.schedule==='daily'&&(!last||now-last>86400000)) await makeCloudBackup(true); if(cloudSettings.schedule==='weekly'&&(!last||now-last>604800000)) await makeCloudBackup(true);}
-    document.getElementById('cloudSettingsBtn').onclick=openCloudSettings; document.getElementById('cloudBackupNowBtn').onclick=()=>makeCloudBackup(false); document.getElementById('chooseCloudFolder').onclick=async()=>{const folder=await window.cloudAPI?.chooseFolder(); if(folder){document.getElementById('cloudFolder').value=folder;}};
+    document.getElementById('cloudSettingsBtn')?.addEventListener('click',openCloudSettings);
+document.getElementById('cloudBackupNowBtn')?.addEventListener('click',()=>makeCloudBackup(false));
+document.getElementById('chooseCloudFolder')?.addEventListener('click',async()=>{const folder=await window.cloudAPI?.chooseFolder(); if(folder?.path){document.getElementById('cloudFolder').value=folder.path;}});
     document.getElementById('cloudForm').onsubmit=e=>{e.preventDefault(); cloudSettings={...cloudSettings,folder:document.getElementById('cloudFolder').value,schedule:document.getElementById('cloudSchedule').value,retention:Number(document.getElementById('cloudRetention').value||10),encrypt:document.getElementById('cloudEncrypt').checked}; const pw=document.getElementById('cloudPassword').value;if(pw)sessionStorage.setItem('vccCloudPassword',pw); localStorage.setItem(CLOUD_KEY,JSON.stringify(cloudSettings)); document.getElementById('cloudStatus').textContent='Cloud backup settings saved.';};
-    document.getElementById('modalBackupNow').onclick=()=>makeCloudBackup(false); document.getElementById('refreshBackups').onclick=refreshCloudBackups; window.cloudAPI?.appClosing(()=>{if(cloudSettings.schedule==='exit') makeCloudBackup(true);}); setTimeout(runScheduledCloudBackup,1500);
+    document.getElementById('modalBackupNow')?.addEventListener('click',()=>makeCloudBackup(false));
+     document.getElementById('refreshBackups')?.addEventListener('click',refreshCloudBackups);
+     window.cloudAPI?.appClosing?.(()=>{if(cloudSettings.schedule==='exit') makeCloudBackup(true);}); setTimeout(runScheduledCloudBackup,1500);
 
     window.addEventListener("beforeunload",()=>{ if(state.backupCenter?.onExit && window.cloudAPI) window.cloudAPI.backupOnExit({destinations:state.backupCenter.destinations.filter(d=>d.enabled!==false),data:buildBackupPayload(),encrypt:!!state.backupCenter.encrypt,password:sessionStorage.getItem("backupPassword")||"",retention:Number(state.backupCenter.retention||10)}); });
 
     function applyTheme(value){document.body.classList.toggle('theme-dark',value==='dark'||(value==='system'&&matchMedia('(prefers-color-scheme: dark)').matches));localStorage.setItem('v7Theme',value);const s=document.getElementById('themeSelector');if(s)s.value=value;}
     document.getElementById('themeSelector').addEventListener('change',e=>applyTheme(e.target.value));applyTheme(localStorage.getItem('v7Theme')||'system');matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{if((localStorage.getItem('v7Theme')||'system')==='system')applyTheme('system')});
-    document.getElementById('ribbonAddVehicle').onclick=()=>document.getElementById('addVehicleBtn').click();document.getElementById('ribbonMaintenance').onclick=()=>document.getElementById('addRecordBtn')?.click();document.getElementById('ribbonRestoration').onclick=()=>document.getElementById('addRestorationBtn')?.click();document.getElementById('ribbonReport').onclick=()=>document.getElementById('printBtn')?.click();
-        const openBug=()=>window.collectorAPI?.openBugReport?.();
-    document.getElementById('reportBugBtn').onclick=openBug; document.getElementById('footerBugBtn').onclick=openBug;
-        async function showUpdateResult(){
-          openModal('updateModal');
-          const c=document.getElementById('updateContent');
-          c.innerHTML='Checking the official GitHub releases…';
-          const r=await window.collectorAPI.checkUpdates();
-          if(!r?.ok){c.innerHTML=`<div class="notice">Update check failed: ${esc(r?.error||'Unknown error')}</div>`;return;}
-          const newer=!!(r.latest&&r.latest!==r.current);
-          c.innerHTML=`<div class="summary-card"><span class="label">Current version</span><span class="value">${esc(r.current)}</span></div><div class="summary-card" style="margin-top:12px"><span class="label">Latest GitHub release</span><span class="value">${esc(r.latest||'No release published')}</span></div><p>${newer?'A newer release is available.':'No Update Available'}</p><div class="update-actions">${r.url?'<button class="btn secondary" id="openReleaseBtn">Open GitHub release</button>':''}${newer?'<button class="btn success" id="installUpdateBtn">Download & Update</button>':''}</div><div class="update-progress" id="updateProgress" style="display:none"><div class="update-progress-track"><div class="update-progress-fill" id="updateProgressFill"></div></div><div class="update-progress-label"><span id="updateProgressText">Preparing update…</span><span id="updateProgressPercent">0%</span></div></div><div id="updateStatus" class="notice" style="margin-top:12px">Updates are sourced from the official GitHub Releases.</div>`;
-          document.getElementById('openReleaseBtn')?.addEventListener('click',()=>window.collectorAPI.openExternal(r.url));
-          document.getElementById('installUpdateBtn')?.addEventListener('click',async()=>{
-            const st=document.getElementById('updateStatus'), prog=document.getElementById('updateProgress');
-            if(prog)prog.style.display='block'; if(st)st.textContent='Downloading update…';
-            const u=await window.collectorAPI.installUpdate();
-            if(!u?.ok){if(st)st.textContent='Update failed: '+(u?.error||'Unknown error');return;}
-            if(u.mode==='none'){if(st)st.textContent='No Update Available';return;}
-            if(st)st.textContent=u.mode==='portable'?'Update downloaded. Restarting the portable application…':'Update downloaded. Restarting to install the update…';
-            if(u.mode!=='portable')setTimeout(()=>window.collectorAPI.finishInstalledUpdate(),1200);
-          });
+    // Version 7.1.1: reliable ribbon actions and GitHub update window.
+    let pendingRibbonAction = null;
+
+    function runRibbonAction(action){
+      if(!selectedVehicle()){
+        pendingRibbonAction = action;
+        openVehicleModal();
+        return;
+      }
+      if(action === 'maintenance') activeTab = 'history';
+      if(action === 'restoration') activeTab = 'restoration';
+      if(action === 'dossier') activeTab = 'reports';
+      render();
+    }
+
+    document.getElementById('ribbonAddVehicle').onclick=()=>openVehicleModal();
+    document.getElementById('ribbonMaintenance').onclick=()=>runRibbonAction('maintenance');
+    document.getElementById('ribbonRestoration').onclick=()=>runRibbonAction('restoration');
+    document.getElementById('ribbonReport').onclick=()=>runRibbonAction('dossier');
+
+    const openBug=async()=>{
+      const result=await window.collectorAPI?.openBugReport?.();
+      if(result && result.ok===false) alert('Could not open the bug-report window: '+(result.error||'Unknown error'));
+    };
+    document.getElementById('reportBugBtn')?.addEventListener('click',openBug);
+    document.getElementById('footerBugBtn')?.addEventListener('click',openBug);
+
+    function setUpdateStatus(text, error=false){
+      const st=document.getElementById('updateStatus');
+      if(st){
+        st.textContent=text;
+        st.className='notice'+(error?' update-error':'');
+      }
+    }
+
+    function renderUpdateProgress(data){
+      const percent=Math.max(0,Math.min(100,Number(data?.percent||0)));
+      const bar=document.getElementById('updateProgressBar');
+      const label=document.getElementById('updateProgressLabel');
+      if(bar)bar.style.width=percent.toFixed(1)+'%';
+      if(label)label.textContent=`${Math.round(percent)}%`;
+      if(percent>0 && percent<100){
+        setUpdateStatus(`Downloading update… ${Math.round(percent)}%`);
+      }
+    }
+
+    async function showUpdateResult(){
+      openModal('updateModal');
+      const c=document.getElementById('updateContent');
+      c.innerHTML='<div class="notice">Checking the official GitHub Releases…</div>';
+      const api=window.collectorAPI;
+      if(!api?.checkUpdates){
+        c.innerHTML='<div class="notice update-error">Update service is unavailable in this build.</div>';
+        return;
+      }
+      const r=await api.checkUpdates();
+      if(!r?.ok){
+        c.innerHTML=`<div class="notice update-error">Update check failed: ${esc(r?.error||'Unknown error')}</div>`;
+        return;
+      }
+
+      const newer=Boolean(r.latest && r.latest!==r.current);
+      c.innerHTML=`
+        <div class="summary-card">
+          <span class="label">Current version</span>
+          <span class="value">${esc(r.current||'Unknown')}</span>
+        </div>
+        <div class="summary-card" style="margin-top:12px">
+          <span class="label">Latest GitHub release</span>
+          <span class="value">${esc(r.latest||'No release published')}</span>
+        </div>
+        <div class="notice" style="margin-top:12px">
+          ${newer?'A newer version is available.':'No Update Available'}
+        </div>
+        <div class="update-actions">
+          ${r.url?'<button class="btn secondary" id="openReleaseBtn" type="button">Open GitHub Release</button>':''}
+          ${newer?'<button class="btn success" id="installUpdateBtn" type="button">Download & Update</button>':''}
+        </div>
+        <div id="updateProgressArea" style="display:none;margin-top:14px">
+          <div style="display:flex;justify-content:space-between;gap:12px">
+            <strong>Update progress</strong><strong id="updateProgressLabel">0%</strong>
+          </div>
+          <div class="usb-progress"><div id="updateProgressBar"></div></div>
+        </div>
+        <div id="updateStatus" class="notice" style="margin-top:12px">
+          Updates are sourced from the official GitHub Releases.
+        </div>`;
+
+      document.getElementById('openReleaseBtn')?.addEventListener('click',()=>api.openExternal(r.url));
+
+      document.getElementById('installUpdateBtn')?.addEventListener('click',async()=>{
+        const progress=document.getElementById('updateProgressArea');
+        if(progress)progress.style.display='block';
+        setUpdateStatus('Preparing update…');
+        const button=document.getElementById('installUpdateBtn');
+        if(button)button.disabled=true;
+        const u=await api.installUpdate();
+        if(!u?.ok){
+          if(button)button.disabled=false;
+          setUpdateStatus(u?.message==='No Update Available'?'No Update Available':'Update failed: '+(u?.error||'Unknown error'),u?.message!=='No Update Available');
+          return;
         }
-        function updateProgress(data){const p=Math.max(0,Math.min(100,Number(data?.percent||0)));const fill=document.getElementById('updateProgressFill');const pct=document.getElementById('updateProgressPercent');const txt=document.getElementById('updateProgressText');const box=document.getElementById('updateProgress');if(box)box.style.display='block';if(fill)fill.style.width=p+'%';if(pct)pct.textContent=Math.round(p)+'%';if(txt)txt.textContent=p>=100?'Update downloaded.':'Downloading update…';}
+        if(u.mode==='none'){
+          setUpdateStatus('No Update Available');
+          return;
+        }
+        renderUpdateProgress({percent:100});
+        setUpdateStatus(u.mode==='portable'
+          ?'Update downloaded. The portable application will restart shortly.'
+          :'Update downloaded and is ready to install. The application will restart shortly.');
+        if(u.mode!=='portable')setTimeout(()=>api.finishInstalledUpdate(),1200);
+      });
+    }
 
-    document.getElementById('checkUpdatesBtn').onclick=showUpdateResult; document.getElementById('footerUpdateBtn').onclick=showUpdateResult;
-    window.collectorAPI?.onUpdateProgress?.(updateProgress);
-    window.collectorAPI?.onUpdateDownloaded?.(()=>{if(document.getElementById('updateContent')){updateProgress({percent:100});const st=document.getElementById('updateStatus');if(st)st.textContent='Update downloaded and ready to install.';}});
-    window.collectorAPI?.onUpdateError?.(data=>{const st=document.getElementById('updateStatus');if(st)st.textContent='Update failed: '+(data?.error||'Unknown error');});
-    window.collectorAPI?.onUpdateNotAvailable?.(()=>{if(document.getElementById('updateContent')){const st=document.getElementById('updateStatus');if(st)st.textContent='No Update Available';}});
-    window.collectorAPI?.onStartupUpdateAvailable?.(data=>{showUpdateResult();});
-    window.collectorAPI?.onStartupUpdateNotAvailable?.(()=>{});
-    window.collectorAPI?.onStartupUpdateError?.(()=>{});
+    document.getElementById('checkUpdatesBtn')?.addEventListener('click',()=>showUpdateResult().catch(e=>alert('Could not check for updates: '+e.message)));
+    document.getElementById('footerUpdateBtn')?.addEventListener('click',()=>showUpdateResult().catch(e=>alert('Could not check for updates: '+e.message)));
 
+    window.collectorAPI?.onUpdateAvailable?.(data=>{
+      if(document.getElementById('updateModal')?.classList.contains('open')){
+        setUpdateStatus(`Update ${data?.version||''} is available.`);
+      }
+    });
+    window.collectorAPI?.onUpdateNotAvailable?.(()=>{
+      if(document.getElementById('updateContent'))setUpdateStatus('No Update Available');
+    });
+    window.collectorAPI?.onUpdateProgress?.(data=>{
+      const area=document.getElementById('updateProgressArea');
+      if(area)area.style.display='block';
+      renderUpdateProgress(data);
+    });
+    window.collectorAPI?.onUpdateDownloaded?.(()=>{
+      if(document.getElementById('updateContent'))setUpdateStatus('Update downloaded and ready to install.');
+    });
+    window.collectorAPI?.onUpdateError?.(data=>{
+      if(document.getElementById('updateContent'))setUpdateStatus('Update error: '+(data?.error||'Unknown error'),true);
+    });
+    window.collectorAPI?.onStartupUpdateAvailable?.(data=>{
+      showUpdateResult().catch(()=>{});
+    });
     render();
     hydrateFromSQLite();
   </script>
