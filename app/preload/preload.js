@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('collectorAPI', {
   diagnostics: () => ipcRenderer.invoke('app:diagnostics'),
   checkUpdates: () => ipcRenderer.invoke('app:check-updates'),
   createBugReport: (payload) => ipcRenderer.invoke('app:create-bug-report', payload),
+  openBugReport: () => ipcRenderer.invoke('app:open-bug-report'),
   openExternal: (url) => ipcRenderer.invoke('app:open-external', url),
   openVehicleWindow: (vehicleId) => ipcRenderer.invoke('vehicle:open-window', vehicleId),
   installUpdate: () => ipcRenderer.invoke('app:update-install'),

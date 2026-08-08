@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Report a Bug</title>
+<style>
+:root{--green:#0d5748;--green2:#073b31;--gold:#c5a554;--bg:#eef2f4;--surface:#fff;--line:#d7e0dd;--text:#17211f;--muted:#64716e;--danger:#9c2f2f}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(135deg,#e8eef0,#f7f8f7);color:var(--text);font:14px "Segoe UI Variable","Segoe UI",Arial,sans-serif}.header{background:linear-gradient(120deg,var(--green2),var(--green));color:#fff;padding:22px 26px;display:flex;gap:16px;align-items:center}.header img{width:58px;height:58px;border-radius:13px}.header h1{margin:0;font-size:22px}.header p{margin:4px 0 0;opacity:.86}.body{padding:22px}.privacy{background:#eef7f4;border:1px solid #a9cfc4;border-radius:12px;padding:13px 15px;margin-bottom:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}label{display:block;font-weight:650;margin-bottom:13px}input,textarea{width:100%;margin-top:7px;border:1px solid var(--line);border-radius:9px;padding:10px 11px;background:#fff;color:var(--text);font:inherit}textarea{min-height:105px;resize:vertical}.full{grid-column:1/-1}.check{display:flex;gap:8px;align-items:center;font-weight:500}.check input{width:auto;margin:0}.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:5px}.btn{border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer}.primary{background:var(--green);color:#fff}.primary:hover{background:var(--green2)}.secondary{background:#e7eeeb;color:var(--text)}.status{margin-top:15px;padding:11px 13px;border-radius:9px;display:none}.status.show{display:block}.status.good{background:#edf7f1;border:1px solid #9bc7ad}.status.bad{background:#fff0f0;border:1px solid #e2aaaa;color:#7e2222}.hint{font-size:12px;color:var(--muted);font-weight:400;margin-top:4px}.meta{background:#f4f7f6;border:1px solid var(--line);border-radius:10px;padding:11px;margin-bottom:16px;color:var(--muted)}
+</style>
+</head><body>
+<header class="header"><img src="../../assets/app.png" alt=""><div><h1>Report a Bug</h1><p>Vintage &amp; Classic Vehicle Maintenance &amp; Restoration Records – Collector Edition</p></div></header>
+<main class="body">
+<div class="privacy"><strong>Your vehicle data stays private.</strong><br>This report does not automatically attach your vehicle records, photographs, documents, registration numbers, addresses, supplier information or database.</div>
+<div id="meta" class="meta">Collecting basic application diagnostics…</div>
+<form id="form">
+<div class="grid">
+<label>Short title *<input id="title" required maxlength="120" placeholder="Example: Maintenance report does not print photos"></label>
+<label>What happened? *<textarea id="description" required placeholder="Describe what went wrong."></textarea></label>
+<label class="full">Steps to reproduce<textarea id="steps" placeholder="1. Open the vehicle…&#10;2. Open Reports…&#10;3. Click Print…"></textarea></label>
+<label>Expected result<textarea id="expected" placeholder="What should have happened?"></textarea></label>
+<label>Actual result<textarea id="actual" placeholder="What happened instead?"></textarea></label>
+<label class="full">Optional attachment<div class="hint">A screenshot or log is not uploaded automatically. The selected filename will be noted and you can attach it on GitHub after the issue page opens.</div><input id="attachment" type="file" accept="image/*,.txt,.log,.zip"></label>
+<label class="full check"><input id="diagnostics" type="checkbox" checked> Include basic app/Windows version and database integrity status</label>
+</div>
+<div class="actions"><button class="btn secondary" type="button" id="cancel">Cancel</button><button class="btn primary" type="submit">🐛 Open GitHub Issue</button></div>
+<div id="status" class="status"></div>
+</form>
+</main>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+(async()=>{try{const d=await window.collectorAPI.diagnostics();document.getElementById('meta').textContent=`Version ${d.version} · Windows ${d.platform} ${d.arch} · Database integrity: ${d.integrity}`;}catch{document.getElementById('meta').textContent='Basic diagnostics unavailable.';}})();
+document.getElementById('cancel').onclick=()=>window.close();
+document.getElementById('form').onsubmit=async e=>{e.preventDefault();const st=document.getElementById('status');st.className='status show';st.textContent='Preparing the GitHub issue…';const file=document.getElementById('attachment').files[0];const r=await window.collectorAPI.createBugReport({title:document.getElementById('title').value.trim(),description:document.getElementById('description').value.trim(),steps:document.getElementById('steps').value.trim(),expected:document.getElementById('expected').value.trim(),actual:document.getElementById('actual').value.trim(),includeDiagnostics:document.getElementById('diagnostics').checked,attachmentName:file?.name||''});if(!r?.ok){st.className='status show bad';st.textContent='Could not open GitHub: '+(r?.error||'Unknown error');return;}st.className='status show good';st.textContent=file?'GitHub has opened the issue form. Add the selected attachment on GitHub, then click Create issue.':'GitHub has opened the issue form. Review the report, then click Create issue.';setTimeout(()=>window.close(),1400);};
+</script></body></html>
