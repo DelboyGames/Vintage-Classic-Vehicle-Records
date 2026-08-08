@@ -1,0 +1,33 @@
+name: Publish Version 7.1 GitHub Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, for example v7.1.0
+        required: true
+        default: v7.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm install
+      - run: npm run check
+      - name: Build installer and portable
+        run: npm run build:both
+      - name: Create GitHub release and upload artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag }}
+        shell: pwsh
+        run: |
+          gh release create $env:TAG release/installer/*.exe release/portable/*.exe --repo $env:GITHUB_REPOSITORY --title "Vintage & Classic Vehicle Records Collector Edition $env:TAG" --generate-notes

@@ -1,0 +1,21 @@
+HOW TO CREATE THE WINDOWS EXE
+
+The desktop application source is complete and configured to produce:
+- A normal Windows installer
+- A portable Windows EXE
+
+BUILD ON A WINDOWS 10 OR WINDOWS 11 COMPUTER
+1. Install the current Node.js LTS release from nodejs.org.
+2. Extract this project ZIP to a normal folder.
+3. Double-click BUILD_WINDOWS.bat.
+4. When the build finishes, open the “release” folder.
+5. The release folder will contain the installer and portable EXE.
+
+RUN WITHOUT BUILDING
+Double-click RUN_DEVELOPMENT.bat after installing Node.js. This opens the desktop application directly in Electron.
+
+WHY AN EXE IS NOT INCLUDED IN THIS PACKAGE
+The application was prepared in a restricted Linux build environment whose internal software registry does not provide Electron. Windows Electron binaries therefore could not be downloaded and packaged here. The project itself is complete and the included Windows build script performs the packaging on a normal internet-connected Windows computer.
+
+CODE SIGNING
+The generated personal-use EXE will be unsigned. Windows SmartScreen may display “Unknown publisher”. Commercial distribution requires a code-signing certificate.

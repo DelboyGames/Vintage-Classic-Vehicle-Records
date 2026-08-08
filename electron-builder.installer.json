@@ -1,0 +1,49 @@
+{
+  "appId": "personal.vintageClassicCarMaintenanceRestorationRecords",
+  "productName": "Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition",
+  "asar": true,
+  "directories": {
+    "output": "release/installer"
+  },
+  "files": [
+    "app/**/*",
+    "assets/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "assets/app.ico",
+    "artifactName": "Vintage-Classic-Vehicle-Records-Collector-Setup-${version}-${arch}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition",
+    "uninstallDisplayName": "Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition",
+    "perMachine": false,
+    "allowElevation": true,
+    "runAfterFinish": true,
+    "deleteAppDataOnUninstall": false,
+    "installerIcon": "assets/app.ico",
+    "uninstallerIcon": "assets/app.ico",
+    "installerHeaderIcon": "assets/app.ico"
+  },
+  "extraResources": [
+    {
+      "from": "bundled-portable",
+      "to": "portable-runtime",
+      "filter": [
+        "**/*"
+      ]
+    }
+  ]
+}

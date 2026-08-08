@@ -1,0 +1,69 @@
+name: Build Version 7.1 Windows Editions
+
+on:
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: Choose edition
+        required: true
+        default: both
+        type: choice
+        options: [installer, portable, both, msi, all]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install dependencies
+        run: npm install
+      - name: Validate project
+        run: npm run check
+      - name: Select edition
+        id: edition
+        shell: pwsh
+        run: |
+          $choice = "${{ github.event.inputs.edition }}"
+          if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "both" }
+          "choice=$choice" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+      - name: Build installer
+        if: steps.edition.outputs.choice == 'installer' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
+        run: npm run build:installer
+      - name: Build portable
+        if: steps.edition.outputs.choice == 'portable' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
+        run: npm run build:portable
+      - name: Build MSI
+        if: steps.edition.outputs.choice == 'msi' || steps.edition.outputs.choice == 'all'
+        run: npm run build:msi
+      - name: Upload installer
+        if: steps.edition.outputs.choice == 'installer' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vintage-Classic-Vehicle-Records-Windows-Installer-v7.1
+          path: release/installer/*.exe
+          if-no-files-found: error
+      - name: Upload portable
+        if: steps.edition.outputs.choice == 'portable' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vintage-Classic-Vehicle-Records-Portable-v7.1
+          path: release/portable/*.exe
+          if-no-files-found: error
+      - name: Upload MSI
+        if: steps.edition.outputs.choice == 'msi' || steps.edition.outputs.choice == 'all'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Vintage-Classic-Vehicle-Records-MSI-v7.1
+          path: release/msi/*.msi
+          if-no-files-found: error

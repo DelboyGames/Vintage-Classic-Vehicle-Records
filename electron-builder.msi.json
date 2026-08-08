@@ -1,0 +1,18 @@
+{
+  "extends": "./package.json",
+  "directories": {
+    "output": "release/msi"
+  },
+  "win": {
+    "target": [
+      {
+        "target": "msi",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "assets/app.ico",
+    "artifactName": "Vintage-Classic-Vehicle-Records-Collector-MSI-${version}-${arch}.${ext}"
+  }
+}

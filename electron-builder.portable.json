@@ -1,0 +1,25 @@
+{
+  "appId": "personal.vintageClassicCarMaintenanceRestorationRecords",
+  "productName": "Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition",
+  "asar": true,
+  "directories": {
+    "output": "release/portable"
+  },
+  "files": [
+    "app/**/*",
+    "assets/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "portable",
+        "arch": [
+          "x64"
+        ]
+      }
+    ],
+    "icon": "assets/app.ico",
+    "artifactName": "Vintage-Classic-Vehicle-Records-Collector-Portable-${version}-${arch}.${ext}"
+  }
+}

@@ -1,0 +1,12 @@
+const fs=require('fs');
+const path=require('path');
+const src=path.join(__dirname,'..','release','portable');
+const dest=path.join(__dirname,'..','bundled-portable');
+fs.rmSync(dest,{recursive:true,force:true});
+fs.mkdirSync(dest,{recursive:true});
+const files=fs.existsSync(src)?fs.readdirSync(src).filter(f=>f.toLowerCase().endsWith('.exe')):[];
+if(!files.length) throw new Error('Portable EXE was not produced in release/portable.');
+const preferred=files.find(f=>/portable/i.test(f))||files[0];
+fs.copyFileSync(path.join(src,preferred),path.join(dest,'Vintage Classic Vehicle Records Portable.exe'));
+fs.writeFileSync(path.join(dest,'runtime-info.json'),JSON.stringify({sourceFile:preferred,version:require('../package.json').version,created:new Date().toISOString()},null,2));
+console.log('Staged portable runtime:',preferred);
