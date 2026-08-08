@@ -560,6 +560,8 @@
     .usb-result{padding:12px;border-radius:10px;background:#edf7f1;border:1px solid #9bc7ad;display:none}
 
     .status-groups{display:grid;gap:14px;margin-top:14px}.status-group{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.55);overflow:hidden}.status-group h3{margin:0;padding:9px 12px;font-size:.9rem}.status-group .vehicle-list{padding:8px;margin:0}.status-pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:.75rem;font-weight:700;background:#e8eee9;color:#275a45}.status-pill.restoration{background:#f6e7c9;color:#8a5b12}.status-pill.stored{background:#e4e7eb;color:#4f5b67}.vehicle-window-btn{margin-left:auto}.footer-bar{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;padding:12px 18px;margin-top:16px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line)}.footer-bar button{border:0;background:transparent;color:var(--accent);font-weight:700;cursor:pointer}.update-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.update-error{border-color:#d9a0a0!important;background:#fff0f0!important;color:#7a2020!important}
+    .collection-tools{display:grid;grid-template-columns:1fr 180px 180px;gap:10px;margin-top:12px}.collection-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.collection-stat{padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--v7-surface)}.collection-stat .n{display:block;font-size:1.35rem;font-weight:800}.health-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.health-chip{padding:5px 9px;border-radius:999px;font-size:.78rem;font-weight:700;border:1px solid var(--line)}.health-ok{background:#e7f5ed;color:#17613e}.health-warn{background:#fff5dc;color:#8a5b12}.health-bad{background:#ffe7e7;color:#8a2020}.timeline-full{position:relative;margin:8px 0 0 10px;padding-left:24px;border-left:2px solid var(--line)}.timeline-full .timeline-entry{position:relative;padding:0 0 18px 10px}.timeline-full .timeline-entry:before{content:"";position:absolute;left:-31px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--accent);border:3px solid var(--paper)}.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.compare-grid figure{margin:0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--v7-surface)}.compare-grid img{width:100%;height:360px;object-fit:contain;background:#111;display:block}.compare-grid figcaption{padding:10px;font-weight:700}.compare-empty{padding:30px;text-align:center;border:1px dashed var(--line);border-radius:12px}.collection-empty{padding:26px}.status-filter-active{outline:2px solid var(--accent)}
+
     /* Version 7 commercial interface */
     :root{--v7-bg:#eef2f4;--v7-surface:rgba(255,255,255,.88);--v7-green:#0d5748;--v7-green2:#073b31;--v7-gold:#c5a554;--v7-text:#17211f;--v7-muted:#64716e}
     body{font-family:"Segoe UI Variable","Segoe UI",Arial,sans-serif;color:var(--v7-text);background:linear-gradient(135deg,#e8eef0,#f7f8f7);transition:background .2s,color .2s}
@@ -612,7 +614,7 @@
         <h1>Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition</h1>
         <p>A private, worldwide digital restoration archive for individual enthusiasts, home restorers and small personal collections.</p>
       </div>
-      <div class="badge">Worldwide Collector Edition · Version 7.1</div>
+      <div class="badge">Worldwide Collector Edition · Version 7.2</div>
     </section>
 
     <div class="layout">
@@ -622,9 +624,15 @@
         </div>
         <div class="panel-body">
           <button class="btn" id="addVehicleBtn">+ Add a car</button>
-          <input id="vehicleSearch" style="margin-top:14px" placeholder="Search make, model or registration..." /><button class="btn secondary small" id="globalSearchBtn" style="margin-top:10px;width:100%">Search all records</button>
+          <input id="vehicleSearch" style="margin-top:14px" placeholder="Search make, model or registration..." />
+          <div class="collection-tools">
+            <select id="collectionStatusFilter" aria-label="Filter vehicles by status"><option value="">All vehicles</option><option value="restoration">Under Restoration</option><option value="maintained">Maintained / No Restoration Required</option><option value="stored">Stored / Preserved</option><option value="planned">Restoration Planned</option><option value="completed">Completed Restoration</option><option value="archived">Archived</option></select>
+            <select id="collectionSort" aria-label="Sort vehicles"><option value="year">Year</option><option value="make">Make</option><option value="model">Model</option><option value="registration">Registration</option><option value="progress">Restoration progress</option></select>
+          </div>
+          <button class="btn secondary small" id="globalSearchBtn" style="margin-top:10px;width:100%">Search all records</button>
           <button class="btn secondary small" id="accessibilityBtn" style="margin-top:8px;width:100%">Accessibility</button>
           <button class="btn secondary small" id="diagnosticsBtn" style="margin-top:8px;width:100%">Diagnostics</button>
+          <div id="collectionStats" class="collection-stats"></div>
           <div id="vehicleList" class="vehicle-list"></div>
           <div class="toolbar" style="margin-top:18px">
             <button class="btn secondary small" id="exportBtn">Export backup</button>
@@ -1024,9 +1032,10 @@
   <div id="saveStatus" class="save-status">SQLite database ready</div>
   <footer class="footer-bar"><span>Vintage &amp; Classic Vehicle Records – Collector Edition v7.1.1</span><button type="button" id="footerBugBtn">🐛 Report a Bug</button><button type="button" id="footerUpdateBtn">↻ Check for Updates</button></footer>
   <div class="modal" id="accessibilityModal"><div class="modal-card"><div class="panel-header"><h3>Accessibility & Display</h3><button class="close-btn" data-close="accessibilityModal">&times;</button></div><div class="panel-body"><label><input id="largeTextToggle" type="checkbox" style="width:auto"> Larger text</label><label style="margin-top:12px"><input id="highContrastToggle" type="checkbox" style="width:auto"> High contrast mode</label><div class="notice" style="margin-top:14px">Windows zoom shortcuts also work: Ctrl + Plus, Ctrl + Minus and Ctrl + 0.</div></div></div></div>
-  <div class="modal" id="diagnosticsModal"><div class="modal-card"><div class="panel-header"><h3>Application Diagnostics</h3><button class="close-btn" data-close="diagnosticsModal">&times;</button></div><div class="panel-body"><div id="diagnosticsContent" class="diagnostics-grid"></div><div class="toolbar" style="margin-top:14px"><button class="btn" id="integrityCheckBtn">Run database integrity check</button><button class="btn secondary" id="recoveryCheckBtn">Check crash recovery</button></div></div></div></div>
+  <div class="modal" id="diagnosticsModal"><div class="modal-card"><div class="panel-header"><h3>Application Diagnostics</h3><button class="close-btn" data-close="diagnosticsModal">&times;</button></div><div class="panel-body"><div id="diagnosticsContent" class="diagnostics-grid"></div><div class="toolbar" style="margin-top:14px"><button class="btn" id="integrityCheckBtn">Run database integrity check</button><button class="btn secondary" id="recoveryCheckBtn">Check crash recovery</button><button class="btn secondary" id="viewLogBtn">View application log</button></div></div></div></div>
 </div>
 
+  <div class="modal" id="photoCompareModal"><div class="modal-card" style="max-width:1000px"><div class="panel-header"><h3>Before / After comparison</h3><button class="close-btn" data-close="photoCompareModal">&times;</button></div><div class="panel-body"><div id="photoCompareContent"></div></div></div></div>
   <div class="modal" id="updateModal"><div class="modal-card"><div class="panel-header"><h3>Software updates</h3><button class="close-btn" data-close="updateModal">&times;</button></div><div class="panel-body" id="updateContent">Checking GitHub releases…</div></div></div>
   <script>
     const STORAGE_KEY = "vintageClassicCarLogbook_v1";
@@ -1240,18 +1249,24 @@
 
     function renderVehicleList() {
       const list = document.getElementById("vehicleList");
-      if (!state.vehicles.length) { list.innerHTML = '<div class="empty-state" style="padding:24px 8px">No cars added yet.</div>'; return; }
+      const stats = document.getElementById("collectionStats");
+      if (!state.vehicles.length) { if(stats)stats.innerHTML=""; list.innerHTML = '<div class="empty-state" style="padding:24px 8px">No cars added yet.</div>'; return; }
       const query = (document.getElementById("vehicleSearch")?.value || "").trim().toLowerCase();
+      const statusFilter = document.getElementById("collectionStatusFilter")?.value || "";
+      const sort = document.getElementById("collectionSort")?.value || "year";
       const labels={restoration:'Under Restoration',maintained:'Maintained / No Restoration Required',stored:'Stored / Preserved',planned:'Restoration Planned',completed:'Completed Restoration',archived:'Archived'};
       const order=['restoration','maintained','stored','planned','completed','archived'];
-      const filtered=state.vehicles.filter(v=>!query||[v.make,v.model,v.registration,v.vin].join(' ').toLowerCase().includes(query));
+      const filtered=state.vehicles.filter(v=>(!query||[v.make,v.model,v.registration,v.vin].join(' ').toLowerCase().includes(query))&&(!statusFilter||(v.status||'maintained')===statusFilter));
+      const counts=Object.fromEntries(order.map(x=>[x,state.vehicles.filter(v=>(v.status||'maintained')===x).length]));
+      if(stats)stats.innerHTML=`<div class="collection-stat"><span class="label">Total cars</span><span class="n">${state.vehicles.length}</span></div><div class="collection-stat"><span class="label">Under restoration</span><span class="n">${counts.restoration}</span></div><div class="collection-stat"><span class="label">Maintained</span><span class="n">${counts.maintained}</span></div><div class="collection-stat"><span class="label">Stored / planned</span><span class="n">${counts.stored+counts.planned}</span></div>`;
+      const sorter=(a,b)=>{if(sort==='progress')return Number(b.restorationProgress||0)-Number(a.restorationProgress||0);const av=String(a[sort]||'').toLowerCase(),bv=String(b[sort]||'').toLowerCase();if(sort==='year')return Number(a.year||0)-Number(b.year||0);return av.localeCompare(bv)};
       list.innerHTML='<div class="status-groups">'+order.map(status=>{
-        const cars=filtered.filter(v=>(v.status||'maintained')===status).sort((a,b)=>Number(a.year)-Number(b.year));
+        const cars=filtered.filter(v=>(v.status||'maintained')===status).sort(sorter);
         if(!cars.length)return '';
         return `<section class="status-group"><h3>${labels[status]} <span class="status-pill ${status==='restoration'||status==='planned'?'restoration':status==='stored'?'stored':''}">${cars.length}</span></h3><div class="vehicle-list">${cars.map(v=>`<button class="vehicle-card ${v.id===currentVehicleId?'active':''}" data-vehicle="${esc(v.id)}"><div class="vehicle-card-inner">${v.photo?`<img class="vehicle-thumb" src="${v.photo}" alt="">`:`<span class="vehicle-thumb placeholder">🚗</span>`}<span class="vehicle-card-text"><strong>${esc(v.year)} ${esc(v.make)} ${esc(v.model)}</strong><span>${esc(v.registration||v.vin||'No registration entered')} · ${Number(v.restorationProgress||0)}%</span></span></div></button>`).join('')}</div></section>`;
       }).join('')+'</div>';
       if(!filtered.length) list.innerHTML='<div class="empty-state" style="padding:24px 8px">No matching cars.</div>';
-      list.querySelectorAll('[data-vehicle]').forEach(btn=>btn.addEventListener('click',()=>{currentVehicleId=btn.dataset.vehicle;activeTab='history';render();}));
+      list.querySelectorAll('[data-vehicle]').forEach(btn=>btn.addEventListener('click',()=>{currentVehicleId=btn.dataset.vehicle;activeTab='dashboard';render();}));
     }
 
     function renderMain() {
@@ -1318,6 +1333,8 @@
           </div>
         </div>
 
+        <div id="vehicleHealthStrip" class="health-strip"></div>
+
         <div class="tabbar">
           <button class="tab ${activeTab === "dashboard" ? "active" : ""}" data-tab="dashboard">Dashboard</button>
           <button class="tab ${activeTab === "history" ? "active" : ""}" data-tab="history">Maintenance</button>
@@ -1326,6 +1343,7 @@
           <button class="tab ${activeTab === "inventory" ? "active" : ""}" data-tab="inventory">Parts inventory</button>
           <button class="tab ${activeTab === "photos" ? "active" : ""}" data-tab="photos">Photographs</button>
           <button class="tab ${activeTab === "documents" ? "active" : ""}" data-tab="documents">Documents</button>
+          <button class="tab ${activeTab === "timeline" ? "active" : ""}" data-tab="timeline">Timeline</button>
           <button class="tab ${activeTab === "reminders" ? "active" : ""}" data-tab="reminders">Reminders</button>
           <button class="tab ${activeTab === "details" ? "active" : ""}" data-tab="details">Vehicle details</button>
           <button class="tab ${activeTab === "calendar" ? "active" : ""}" data-tab="calendar">Calendar</button>
@@ -1341,13 +1359,15 @@
 
         <div class="tab-content ${activeTab === "documents" ? "active" : ""}" id="tab-documents"><div class="toolbar"><button class="btn" id="tabAddDocumentBtn">+ Add document</button></div><input id="documentSearch" placeholder="Search document title, type or notes..." style="margin-bottom:14px"/><div id="documentList" class="record-list"></div></div>
 
+        <div class="tab-content ${activeTab === "timeline" ? "active" : ""}" id="tab-timeline"><div class="module-intro"><strong>Complete vehicle timeline.</strong> A chronological view of maintenance, restoration, reminders and photographs.</div><div id="timelineContent" class="timeline-full"></div></div>
+
         <div class="tab-content ${activeTab === "reminders" ? "active" : ""}" id="tab-reminders"><div class="toolbar"><button class="btn" id="tabAddReminderBtn">+ Add reminder</button></div><div id="reminderList" class="record-list"></div></div>
 
 
         <div class="tab-content ${activeTab === "photos" ? "active" : ""}" id="tab-photos">
           <div class="module-intro"><strong>Photograph archive.</strong> Build albums for exterior, interior, engine, chassis and restoration stages. Use Before and After albums for comparison.</div>
           <div id="photoDropZone" class="drop-zone">Drag and drop photographs here, or click <strong>Add photograph</strong>.</div>
-          <div class="toolbar"><button class="btn" id="tabAddPhotoBtn">+ Add photograph</button><select id="photoAlbumFilter"><option value="">All albums</option><option>Exterior</option><option>Interior</option><option>Engine</option><option>Chassis</option><option>Bodywork</option><option>Paint</option><option>Trim</option><option>Documents</option><option>Before</option><option>After</option><option>Other</option></select></div>
+          <div class="toolbar"><button class="btn" id="tabAddPhotoBtn">+ Add photograph</button><button class="btn secondary" id="comparePhotosBtn">Before / After comparison</button><select id="photoAlbumFilter"><option value="">All albums</option><option>Exterior</option><option>Interior</option><option>Engine</option><option>Chassis</option><option>Bodywork</option><option>Paint</option><option>Trim</option><option>Documents</option><option>Before</option><option>After</option><option>Other</option></select></div>
           <div id="photoList" class="photo-grid"></div>
         </div>
 
@@ -1559,6 +1579,7 @@
       document.getElementById("tabAddReminderBtn").addEventListener("click", () => openReminderModal());
       document.getElementById("tabAddPhotoBtn").addEventListener("click", () => openPhotoModal());
       document.getElementById("photoAlbumFilter").addEventListener("change", e => renderPhotoList(e.target.value));
+      document.getElementById("comparePhotosBtn")?.addEventListener("click",()=>{const before=vehiclePhotos().filter(p=>p.album==='Before'),after=vehiclePhotos().filter(p=>p.album==='After');const box=document.getElementById('photoCompareContent');if(!before.length&&!after.length){box.innerHTML='<div class="compare-empty">Add photographs to the <strong>Before</strong> and <strong>After</strong> albums to compare restoration stages.</div>';}else{box.innerHTML=`<div class="compare-grid"><figure>${before[0]?`<img src="${before[0].data}" alt="Before">`:'<div class="compare-empty">No Before photograph</div>'}<figcaption>Before${before[0]?` · ${esc(before[0].title)}`:''}</figcaption></figure><figure>${after[0]?`<img src="${after[0].data}" alt="After">`:'<div class="compare-empty">No After photograph</div>'}<figcaption>After${after[0]?` · ${esc(after[0].title)}`:''}</figcaption></figure></div>`;}openModal('photoCompareModal');});
       document.getElementById("tabAddGarageBtn").addEventListener("click", () => openGarageModal());
       document.getElementById("garageSearch").addEventListener("input", e => renderGarageList(e.target.value));
       document.getElementById("dossierBtn").addEventListener("click", printVehicleDossier);
@@ -1583,7 +1604,7 @@
       const verifyUsbCopyBtn=document.getElementById("verifyUsbCopyBtn"); if(verifyUsbCopyBtn) verifyUsbCopyBtn.onclick=verifyPortableUsbCopy;
       const openUsbCopyBtn=document.getElementById("openUsbCopyBtn"); if(openUsbCopyBtn) openUsbCopyBtn.onclick=openPortableUsbCopy;
       setupPhotoDropZone();
-      renderDashboard(); renderPartList(""); renderDocumentList(""); renderReminderList(); renderPhotoList(""); renderGarageList(""); renderCalendar(); renderBackupCentre();
+      renderDashboard(); renderVehicleTimeline(); renderVehicleHealth(); renderPartList(""); renderDocumentList(""); renderReminderList(); renderPhotoList(""); renderGarageList(""); renderCalendar(); renderBackupCentre();
     }
 
     function todayIso(){ return new Date().toISOString().slice(0,10); }
@@ -1804,6 +1825,23 @@
     }
 
 
+    function renderVehicleTimeline(){
+      const t=document.getElementById("timelineContent"); if(!t)return;
+      const v=selectedVehicle(); if(!v){t.innerHTML='<div class="empty-state">Select a vehicle to view its timeline.</div>';return;}
+      const items=[
+        ...vehicleRecords(v.id).map(r=>({date:r.date,title:r.title,type:'Maintenance',meta:`${r.category||'Maintenance'}${r.mileage?' · '+Number(r.mileage).toLocaleString()+' miles':''}`,body:r.notes})),
+        ...restorationRecords(v.id).map(r=>({date:r.startDate,title:r.title,type:'Restoration',meta:`${r.area||'Restoration'} · ${r.status||''} · ${Number(r.progress||0)}%`,body:r.work})),
+        ...vehicleReminders().map(r=>({date:r.dueDate,title:r.title,type:'Reminder',meta:`${r.category||'Reminder'} · ${r.completed?'Completed':'Due'}`,body:r.notes})),
+        ...vehiclePhotos().map(p=>({date:p.date,title:p.title,type:'Photograph',meta:p.album||'Photograph',body:p.caption}))
+      ].filter(x=>x.date).sort((a,b)=>b.date.localeCompare(a.date));
+      t.innerHTML=items.length?items.map(x=>`<div class="timeline-entry"><strong>${esc(x.title)}</strong><div class="record-meta">${formatDate(x.date)} · ${esc(x.type)} · ${esc(x.meta)}</div>${x.body?`<div>${esc(x.body)}</div>`:''}</div>`).join(''):'<div class="empty-state">No dated events yet.</div>';
+    }
+    function renderVehicleHealth(){
+      const t=document.getElementById('vehicleHealthStrip'); if(!t)return; const v=selectedVehicle(); if(!v){t.innerHTML='';return;}
+      const rem=vehicleReminders().filter(r=>!r.completed), overdue=rem.filter(r=>r.dueDate&&daysUntil(r.dueDate)<0), due=rem.filter(r=>r.dueDate&&daysUntil(r.dueDate)>=0&&daysUntil(r.dueDate)<=30);
+      const records=vehicleRecords(v.id), photos=vehiclePhotos(), docs=vehicleDocuments();
+      t.innerHTML=`<span class="health-chip ${overdue.length?'health-bad':due.length?'health-warn':'health-ok'}">${overdue.length?'🔴 '+overdue.length+' overdue':due.length?'🟠 '+due.length+' due within 30 days':'🟢 Maintenance up to date'}</span><span class="health-chip ${photos.length?'health-ok':'health-warn'}">${photos.length?'📷 '+photos.length+' photographs':'📷 No photographs'}</span><span class="health-chip ${docs.length?'health-ok':'health-warn'}">${docs.length?'📄 '+docs.length+' documents':'📄 No documents'}</span><span class="health-chip ${records.length?'health-ok':'health-warn'}">${records.length?'🧾 '+records.length+' maintenance records':'🧾 No maintenance records'}</span>`;
+    }
     function renderDashboard(){ const t=document.getElementById("dashboardContent"); if(!t)return; const rec=vehicleRecords(currentVehicleId), res=restorationRecords(currentVehicleId), parts=vehicleParts(), rem=vehicleReminders(); const open=rem.filter(r=>!r.completed), overdue=open.filter(r=>r.dueDate&&daysUntil(r.dueDate)<0), low=parts.filter(p=>Number(p.quantity||0)<=Number(p.reorder||0)); const spend=[...rec,...res].reduce((a,r)=>a+Number(r.partsCost||0)+Number(r.labourCost||0),0); const curr=[...rec,...res][0]?.currency||defaultCurrency(); const avg=res.length?Math.round(res.reduce((a,r)=>a+Number(r.progress||0),0)/res.length):0; const monthly={}; [...rec,...res].forEach(r=>{const d=r.date||r.startDate;if(!d)return;const k=d.slice(0,7);monthly[k]=(monthly[k]||0)+Number(r.partsCost||0)+Number(r.labourCost||0)}); const bars=Object.entries(monthly).sort().slice(-8); const max=Math.max(1,...bars.map(x=>x[1])); const timeline=[...rec.map(r=>({d:r.date,t:r.title,k:'Maintenance'})),...res.map(r=>({d:r.startDate,t:r.title,k:'Restoration'}))].filter(x=>x.d).sort((a,b)=>b.d.localeCompare(a.d)).slice(0,8); t.innerHTML=`<div class="dashboard-grid"><div class="summary-card"><span class="label">Total investment</span><span class="value">${formatMoney(spend,curr)}</span></div><div class="summary-card"><span class="label">Open reminders</span><span class="value">${open.length}</span></div><div class="summary-card"><span class="label">Overdue</span><span class="value">${overdue.length}</span></div><div class="summary-card"><span class="label">Restoration progress</span><span class="value">${avg}%</span><div class="progress-track"><div class="progress-fill" style="width:${avg}%"></div></div></div></div><div class="form-grid"><section class="chart-card"><h3>Recorded spend by month</h3><div class="mini-bars">${bars.length?bars.map(([k,v])=>`<div class="mini-bar" title="${formatMoney(v,curr)}" style="height:${Math.max(5,v/max*100)}%"><span>${k.slice(5)}</span></div>`).join(''):'<div class="empty-state">Add costed records to show the chart.</div>'}</div></section><section class="chart-card"><h3>Recent vehicle timeline</h3><div class="timeline-v7">${timeline.length?timeline.map(x=>`<div class="timeline-entry"><strong>${esc(x.t)}</strong><div class="record-meta">${formatDate(x.d)} · ${x.k}</div></div>`).join(''):'<div class="empty-state">No dated records yet.</div>'}</div></section></div>${overdue.length?`<h3>Needs attention</h3><div class="record-list">${overdue.map(r=>`<div class="record"><strong class="status-overdue">${esc(r.title)}</strong><div>${formatDate(r.dueDate)} · ${esc(r.priority)}</div></div>`).join("")}</div>`:""}${low.length?`<h3>Low stock</h3><div class="record-list">${low.map(p=>`<div class="record"><strong>${esc(p.name)}</strong><div>Stock ${Number(p.quantity||0)} · Reorder ${Number(p.reorder||0)}</div></div>`).join("")}</div>`:""}`; }
     function renderPartList(term){ const t=document.getElementById("partList"); if(!t)return; term=(term||"").toLowerCase(); const a=vehicleParts().filter(p=>[p.name,p.number,p.category,p.supplier,p.location,p.notes].join(" ").toLowerCase().includes(term)); if(!a.length){t.innerHTML='<div class="empty-state"><h3>No inventory parts</h3><p>Add spare parts and set reorder levels.</p></div>';return;} t.innerHTML=`<div class="table-wrap"><table class="data-table"><thead><tr><th>Part</th><th>Stock</th><th>Supplier</th><th>Location</th><th>Actions</th></tr></thead><tbody>${a.map(p=>`<tr><td><strong>${esc(p.name)}</strong><br>${esc(p.number||"")} · ${esc(p.category||"")}</td><td class="${Number(p.quantity||0)<=Number(p.reorder||0)?'status-overdue':''}">${Number(p.quantity||0)}<br><small>Reorder ${Number(p.reorder||0)}</small></td><td>${esc(p.supplier||"—")}</td><td>${esc(p.location||"—")}</td><td><button class="btn secondary small" data-edit-part="${p.id}">Edit</button> <button class="btn danger small" data-delete-part="${p.id}">Delete</button></td></tr>`).join("")}</tbody></table></div>`; t.querySelectorAll('[data-edit-part]').forEach(b=>b.onclick=()=>openPartModal(state.inventory.find(x=>x.id===b.dataset.editPart))); t.querySelectorAll('[data-delete-part]').forEach(b=>b.onclick=()=>{if(confirm('Delete this inventory part?')){state.inventory=state.inventory.filter(x=>x.id!==b.dataset.deletePart);render();}}); }
     function renderDocumentList(term){ const t=document.getElementById("documentList"); if(!t)return; term=(term||"").toLowerCase(); const a=vehicleDocuments().filter(d=>[d.title,d.type,d.notes,d.fileName].join(" ").toLowerCase().includes(term)); if(!a.length){t.innerHTML='<div class="empty-state"><h3>No documents</h3><p>Attach invoices, certificates, receipts and workshop reports.</p></div>';return;} t.innerHTML=a.map(d=>`<article class="record"><div class="attachment-row"><div><h4>${esc(d.title)}</h4><div class="record-meta">${formatDate(d.date)} · ${esc(d.type)} · ${esc(d.fileName||'No file attached')}</div>${d.notes?`<div>${esc(d.notes)}</div>`:''}</div><div class="record-actions">${d.fileData?`<button class="btn secondary small" data-open-doc="${d.id}">Open</button>`:''}<button class="btn secondary small" data-edit-doc="${d.id}">Edit</button><button class="btn danger small" data-delete-doc="${d.id}">Delete</button></div></div></article>`).join(''); t.querySelectorAll('[data-open-doc]').forEach(b=>b.onclick=()=>{const d=state.documents.find(x=>x.id===b.dataset.openDoc); const a=document.createElement('a');a.href=d.fileData;a.download=d.fileName||'document';a.click();}); t.querySelectorAll('[data-edit-doc]').forEach(b=>b.onclick=()=>openDocumentModal(state.documents.find(x=>x.id===b.dataset.editDoc))); t.querySelectorAll('[data-delete-doc]').forEach(b=>b.onclick=()=>{if(confirm('Delete this document?')){state.documents=state.documents.filter(x=>x.id!==b.dataset.deleteDoc);render();}}); }
@@ -2266,10 +2304,13 @@
     document.getElementById("diagnosticsBtn").addEventListener("click",async()=>{const d=window.collectorAPI?await window.collectorAPI.diagnostics():{};document.getElementById("diagnosticsContent").innerHTML=Object.entries(d||{}).map(([k,v])=>`<div class="diagnostic-card"><strong>${esc(k)}</strong><div class="portable-path">${esc(String(v))}</div></div>`).join("");openModal("diagnosticsModal");});
     document.getElementById("integrityCheckBtn").addEventListener("click",async()=>{const r=await window.storageAPI?.integrityCheck();alert(r?.ok?`Database integrity check passed.\n${r.databasePath}`:`Integrity check failed: ${r?.result||r?.error}`);});
     document.getElementById("recoveryCheckBtn").addEventListener("click",async()=>{const r=await window.storageAPI?.recoveryStatus();if(!r?.available){alert("No crash-recovery snapshot is currently available.");return;}if(confirm(`A recovery snapshot from ${new Date(r.created).toLocaleString()} is available. Restore it now?`)){const x=await window.storageAPI.restoreRecovery();if(x?.ok){localStorage.setItem(STORAGE_KEY,JSON.stringify(x.state));location.reload();}}});
+    document.getElementById("viewLogBtn").addEventListener("click",async()=>{const r=await window.collectorAPI?.getLog();if(!r?.ok){alert("Could not read application log: "+(r?.error||"Unknown error"));return;}const w=window.open("about:blank","_blank","width=1000,height=700");if(w){w.document.write("<pre style=\"white-space:pre-wrap;font-family:Consolas,monospace;padding:20px\">"+esc(r.content||"No log entries yet.")+"</pre>");w.document.close();}else alert("Application log: "+r.path);});
     applyUiPrefs();
 
     document.getElementById("addVehicleBtn").addEventListener("click", () => openVehicleModal());
     document.getElementById("vehicleSearch").addEventListener("input", renderVehicleList);
+    document.getElementById("collectionStatusFilter")?.addEventListener("change", renderVehicleList);
+    document.getElementById("collectionSort")?.addEventListener("change", renderVehicleList);
 
     function updatePhotoPreview(dataUrl) {
       const preview = document.getElementById("vehiclePhotoPreview");
@@ -2523,7 +2564,7 @@ document.getElementById('chooseCloudFolder')?.addEventListener('click',async()=>
         return;
       }
 
-      const newer=Boolean(r.latest && r.latest!==r.current);
+      const newer=Boolean(r.newer);
       c.innerHTML=`
         <div class="summary-card">
           <span class="label">Current version</span>
@@ -2546,10 +2587,13 @@ document.getElementById('chooseCloudFolder')?.addEventListener('click',async()=>
           </div>
           <div class="usb-progress"><div id="updateProgressBar"></div></div>
         </div>
+        <div id="updateReleaseNotes" class="notice" style="margin-top:12px;display:none"></div>
         <div id="updateStatus" class="notice" style="margin-top:12px">
           Updates are sourced from the official GitHub Releases.
         </div>`;
 
+      const notesBox=document.getElementById('updateReleaseNotes');
+      if(notesBox && r.releaseNotes){notesBox.style.display='block';notesBox.innerHTML=`<strong>What's new</strong><div style="white-space:pre-wrap;margin-top:8px">${esc(r.releaseNotes.slice(0,12000))}</div>`;}
       document.getElementById('openReleaseBtn')?.addEventListener('click',()=>api.openExternal(r.url));
 
       document.getElementById('installUpdateBtn')?.addEventListener('click',async()=>{

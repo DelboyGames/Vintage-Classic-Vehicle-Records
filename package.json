@@ -1,8 +1,8 @@
 {
   "name": "vintage-classic-car-maintenance-restoration-records",
   "productName": "Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition",
-  "version": "7.1.0",
-  "description": "Worldwide Collector Edition with separate vehicle workspaces, vehicle status categories, GitHub bug reporting, automatic updates, USB portable mode, themes, dashboards and professional reports.",
+  "version": "7.2.0",
+  "description": "Commercial-style worldwide Collector Edition with enhanced vehicle workspaces, restoration timeline, photo comparison, collection dashboard, themes, branded reports, GitHub updates and privacy-safe bug reporting.",
   "main": "app/main/main.js",
   "author": "Personal Use",
   "license": "UNLICENSED",
@@ -12,17 +12,22 @@
     "check": "node --check app/main/main.js && node --check app/preload/preload.js && node tests/project-smoke-test.js",
     "build:installer": "npm run build:portable-runtime && electron-builder --config electron-builder.installer.json --x64 --publish never",
     "build:portable": "npm run check && electron-builder --config electron-builder.portable.json --x64 --publish never",
-    "build:both": "npm run build:installer && npm run build:portable",
+    "build:both": "npm run build:installer",
     "build:windows": "npm run build:installer",
     "dist": "npm run build:installer",
     "stage:portable-runtime": "node scripts/stage-portable-runtime.js",
     "build:portable-runtime": "npm run check && electron-builder --config electron-builder.portable.json --x64 --publish never && npm run stage:portable-runtime",
     "build:msi": "npm run check && electron-builder --config electron-builder.msi.json --x64 --publish never",
-    "build:all": "npm run build:installer && npm run build:portable && npm run build:msi"
+    "build:all": "npm run build:installer && npm run build:msi"
   },
   "devDependencies": {
     "electron": "^37.2.6",
     "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "sql.js": "^1.13.0",
+    "electron-updater": "^6.6.2"
   },
   "build": {
     "appId": "personal.vintageClassicCarMaintenanceRestorationRecords",
@@ -38,7 +43,13 @@
     ],
     "win": {
       "icon": "assets/app.ico",
-      "artifactName": "Vintage-Classic-Vehicle-Records-Collector-v7-${version}-${arch}.${ext}"
+      "artifactName": "Vintage-Classic-Vehicle-Records-Collector-v7.2-${version}-${arch}.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "DelboyGames",
+      "repo": "vintage-classic-car-records",
+      "releaseType": "release"
     },
     "nsis": {
       "oneClick": false,
@@ -54,19 +65,6 @@
       "installerIcon": "assets/app.ico",
       "uninstallerIcon": "assets/app.ico",
       "installerHeaderIcon": "assets/app.ico"
-    },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "DelboyGames",
-        "repo": "vintage-classic-car-records",
-        "releaseType": "release"
-      }
-    ]
-  },
-  "dependencies": {
-    "qrcode": "^1.5.4",
-    "sql.js": "^1.13.0",
-    "electron-updater": "^6.6.2"
+    }
   }
 }
