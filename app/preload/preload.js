@@ -13,6 +13,11 @@ contextBridge.exposeInMainWorld('collectorAPI', {
   installUpdate: () => ipcRenderer.invoke('app:update-install'),
   finishInstalledUpdate: () => ipcRenderer.invoke('app:update-quit-and-install'),
   onUpdateAvailable: (fn) => ipcRenderer.on('updates:available', (_e,data)=>fn(data)),
+  onUpdateNotAvailable: (fn) => ipcRenderer.on('updates:not-available', (_e,data)=>fn(data)),
+  onStartupUpdateAvailable: (fn) => ipcRenderer.on('updates:startup-available', (_e,data)=>fn(data)),
+  onStartupUpdateNotAvailable: (fn) => ipcRenderer.on('updates:startup-not-available', (_e,data)=>fn(data)),
+  onStartupUpdateError: (fn) => ipcRenderer.on('updates:startup-error', (_e,data)=>fn(data)),
+  onUpdateProgress: (fn) => ipcRenderer.on('updates:progress', (_e,data)=>fn(data)),
   onUpdateDownloaded: (fn) => ipcRenderer.on('updates:downloaded', (_e,data)=>fn(data)),
   onUpdateError: (fn) => ipcRenderer.on('updates:error', (_e,data)=>fn(data))
 });
