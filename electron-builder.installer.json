@@ -22,6 +22,14 @@
     "icon": "assets/app.ico",
     "artifactName": "Vintage-Classic-Vehicle-Records-Collector-Setup-${version}-${arch}.${ext}"
   },
+  "publish": [
+    {
+      "provider": "github",
+      "owner": "DelboyGames",
+      "repo": "Vintage-Classic-Vehicle-Records",
+      "releaseType": "release"
+    }
+  ],
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,

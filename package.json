@@ -2,11 +2,15 @@
   "name": "vintage-classic-car-maintenance-restoration-records",
   "productName": "Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition",
   "version": "7.1.0",
-  "description": "Worldwide Collector Edition with separate vehicle workspaces, vehicle status categories, GitHub bug reporting, automatic updates, USB portable mode, themes, dashboards and professional reports.",
+  "description": "Worldwide Collector Edition with separate vehicle workspaces, vehicle status categories, GitHub bug reporting, automatic updates, themes, dashboards and professional reports.",
   "main": "app/main/main.js",
   "author": "Personal Use",
   "license": "UNLICENSED",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DelboyGames/Vintage-Classic-Vehicle-Records.git"
+  },
   "scripts": {
     "start": "electron .",
     "check": "node --check app/main/main.js && node --check app/preload/preload.js && node tests/project-smoke-test.js",
@@ -54,7 +58,7 @@
       {
         "provider": "github",
         "owner": "DelboyGames",
-        "repo": "vintage-classic-car-records",
+        "repo": "Vintage-Classic-Vehicle-Records",
         "releaseType": "release"
       }
     ]

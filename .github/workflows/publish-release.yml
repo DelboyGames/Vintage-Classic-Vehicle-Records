@@ -30,4 +30,4 @@ jobs:
           TAG: ${{ github.event.inputs.tag }}
         shell: pwsh
         run: |
-          gh release create $env:TAG release/installer/*.exe --repo $env:GITHUB_REPOSITORY --title "Vintage & Classic Vehicle Records Collector Edition $env:TAG" --generate-notes
+          gh release create $env:TAG release/installer/*.exe release/installer/*.exe.blockmap release/installer/latest.yml --repo $env:GITHUB_REPOSITORY --title "Vintage & Classic Vehicle Records Collector Edition $env:TAG" --generate-notes
