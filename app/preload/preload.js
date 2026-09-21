@@ -14,12 +14,12 @@ contextBridge.exposeInMainWorld('collectorAPI', {
   finishInstalledUpdate: () => ipcRenderer.invoke('app:update-quit-and-install'),
   onUpdateAvailable: (fn) => ipcRenderer.on('updates:available', (_e,data)=>fn(data)),
   onUpdateNotAvailable: (fn) => ipcRenderer.on('updates:not-available', (_e,data)=>fn(data)),
-  onStartupUpdateAvailable: (fn) => ipcRenderer.on('updates:startup-available', (_e,data)=>fn(data)),
-  onStartupUpdateNotAvailable: (fn) => ipcRenderer.on('updates:startup-not-available', (_e,data)=>fn(data)),
-  onStartupUpdateError: (fn) => ipcRenderer.on('updates:startup-error', (_e,data)=>fn(data)),
   onUpdateProgress: (fn) => ipcRenderer.on('updates:progress', (_e,data)=>fn(data)),
   onUpdateDownloaded: (fn) => ipcRenderer.on('updates:downloaded', (_e,data)=>fn(data)),
-  onUpdateError: (fn) => ipcRenderer.on('updates:error', (_e,data)=>fn(data))
+  onUpdateError: (fn) => ipcRenderer.on('updates:error', (_e,data)=>fn(data)),
+  onStartupUpdateAvailable: (fn) => ipcRenderer.on('updates:startup-available', (_e,data)=>fn(data)),
+  onStartupUpdateNotAvailable: (fn) => ipcRenderer.on('updates:startup-not-available', (_e,data)=>fn(data)),
+  onStartupUpdateError: (fn) => ipcRenderer.on('updates:startup-error', (_e,data)=>fn(data))
 });
 
 contextBridge.exposeInMainWorld('storageAPI', {
@@ -34,13 +34,16 @@ contextBridge.exposeInMainWorld('storageAPI', {
 contextBridge.exposeInMainWorld('cloudAPI', {
   chooseFolder: () => ipcRenderer.invoke('cloud:choose-folder'),
   backupAll: (payload) => ipcRenderer.invoke('cloud:backup-all', payload),
+  saveBackup: (payload) => ipcRenderer.invoke('cloud:backup-all', payload),
+  listBackups: async (_folderPath) => [],
   verifyBackups: (paths) => ipcRenderer.invoke('cloud:verify-backups', paths),
   chooseBackupFile: () => ipcRenderer.invoke('cloud:choose-backup-file'),
   readBackup: (payload) => ipcRenderer.invoke('cloud:read-backup', payload),
   safetyBackup: (payload) => ipcRenderer.invoke('cloud:safety-backup', payload),
   choosePortableFolder: () => ipcRenderer.invoke('cloud:choose-portable-folder'),
   setPortablePath: (folderPath) => ipcRenderer.invoke('cloud:set-portable-path', folderPath),
-  backupOnExit: (payload) => ipcRenderer.send('cloud:backup-on-exit', payload)
+  backupOnExit: (payload) => ipcRenderer.send('cloud:backup-on-exit', payload),
+  appClosing: (fn) => ipcRenderer.on('app:closing', (_e, data) => fn?.(data))
 });
 
 contextBridge.exposeInMainWorld('usbAPI', {
