@@ -30,7 +30,7 @@ The application stores the complete logical state in SQLite and keeps photos and
 
 The project produces both:
 
-- a portable Windows executable;
+- a Windows setup executable;
 - an NSIS Windows installer.
 
 Both editions use the same source code and database format.

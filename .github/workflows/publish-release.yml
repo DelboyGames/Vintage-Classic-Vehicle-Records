@@ -22,12 +22,12 @@ jobs:
           package-manager-cache: false
       - run: npm install
       - run: npm run check
-      - name: Build installer and portable
-        run: npm run build:both
+      - name: Build setup EXE
+        run: npm run build:setup
       - name: Create GitHub release and upload artifacts
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.inputs.tag }}
         shell: pwsh
         run: |
-          gh release create $env:TAG release/installer/*.exe release/portable/*.exe --repo $env:GITHUB_REPOSITORY --title "Vintage & Classic Vehicle Records Collector Edition $env:TAG" --generate-notes
+          gh release create $env:TAG release/installer/*.exe --repo $env:GITHUB_REPOSITORY --title "Vintage & Classic Vehicle Records Collector Edition $env:TAG" --generate-notes

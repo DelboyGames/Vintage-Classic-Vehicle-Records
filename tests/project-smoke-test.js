@@ -24,8 +24,8 @@ for (const marker of ['Backup Centre', 'Restoration', 'Photographs', 'Parts supp
 
 const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 if (pkg.main !== 'app/main/main.js') throw new Error('package.json main entry is incorrect');
-if (!pkg.scripts['build:portable'] || !pkg.scripts['build:installer']) throw new Error('Build scripts are incomplete');
+if (!pkg.scripts['build:setup'] || !pkg.scripts['build:installer']) throw new Error('Setup build scripts are incomplete');
 
 console.log('Project smoke test passed.');
 
-for (const f of ['electron-builder.installer.json','electron-builder.portable.json','scripts/stage-portable-runtime.js']) { if (!fs.existsSync(path.join(root,f))) throw new Error('Missing '+f); }
+for (const f of ['electron-builder.installer.json']) { if (!fs.existsSync(path.join(root,f))) throw new Error('Missing '+f); }

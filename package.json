@@ -10,15 +10,10 @@
   "scripts": {
     "start": "electron .",
     "check": "node --check app/main/main.js && node --check app/preload/preload.js && node tests/project-smoke-test.js",
-    "build:installer": "npm run build:portable-runtime && electron-builder --config electron-builder.installer.json --x64 --publish never",
-    "build:portable": "npm run check && electron-builder --config electron-builder.portable.json --x64 --publish never",
-    "build:both": "npm run build:installer && npm run build:portable",
-    "build:windows": "npm run build:installer",
-    "dist": "npm run build:installer",
-    "stage:portable-runtime": "node scripts/stage-portable-runtime.js",
-    "build:portable-runtime": "npm run check && electron-builder --config electron-builder.portable.json --x64 --publish never && npm run stage:portable-runtime",
-    "build:msi": "npm run check && electron-builder --config electron-builder.msi.json --x64 --publish never",
-    "build:all": "npm run build:installer && npm run build:portable && npm run build:msi"
+    "build:setup": "npm run check && electron-builder --config electron-builder.installer.json --x64 --publish never",
+    "build:installer": "npm run build:setup",
+    "build:windows": "npm run build:setup",
+    "dist": "npm run build:setup"
   },
   "devDependencies": {
     "electron": "^37.2.6",

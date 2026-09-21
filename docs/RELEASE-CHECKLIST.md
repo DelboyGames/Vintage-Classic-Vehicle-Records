@@ -1,8 +1,8 @@
 # Release checklist
 
 - Run `npm run check`.
-- Build both portable and installer targets.
-- Launch the portable build on Windows 10 and Windows 11.
+- Build the setup EXE.
+- Install and launch the setup build on Windows 10 and Windows 11.
 - Create, edit and delete a test vehicle.
 - Add maintenance, restoration, photograph, document and supplier records.
 - Run SQLite integrity diagnostics.

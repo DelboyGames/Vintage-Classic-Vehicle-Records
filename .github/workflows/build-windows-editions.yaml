@@ -1,14 +1,7 @@
-name: Build Version 7.1 Windows Editions
+name: Build Version 7.1 Windows Setup
 
 on:
   workflow_dispatch:
-    inputs:
-      edition:
-        description: Choose edition
-        required: true
-        default: both
-        type: choice
-        options: [installer, portable, both, msi, all]
   push:
     branches: [main]
 
@@ -30,40 +23,11 @@ jobs:
         run: npm install
       - name: Validate project
         run: npm run check
-      - name: Select edition
-        id: edition
-        shell: pwsh
-        run: |
-          $choice = "${{ github.event.inputs.edition }}"
-          if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "both" }
-          "choice=$choice" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-      - name: Build installer
-        if: steps.edition.outputs.choice == 'installer' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
-        run: npm run build:installer
-      - name: Build portable
-        if: steps.edition.outputs.choice == 'portable' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
-        run: npm run build:portable
-      - name: Build MSI
-        if: steps.edition.outputs.choice == 'msi' || steps.edition.outputs.choice == 'all'
-        run: npm run build:msi
-      - name: Upload installer
-        if: steps.edition.outputs.choice == 'installer' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
+      - name: Build setup EXE
+        run: npm run build:setup
+      - name: Upload setup EXE
         uses: actions/upload-artifact@v4
         with:
           name: Vintage Classic Vehicle Records Setup EXE
           path: release/installer/*.exe
-          if-no-files-found: error
-      - name: Upload portable
-        if: steps.edition.outputs.choice == 'portable' || steps.edition.outputs.choice == 'both' || steps.edition.outputs.choice == 'all'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Vintage Classic Vehicle Records Portable EXE
-          path: release/portable/*.exe
-          if-no-files-found: error
-      - name: Upload MSI
-        if: steps.edition.outputs.choice == 'msi' || steps.edition.outputs.choice == 'all'
-        uses: actions/upload-artifact@v4
-        with:
-          name: Vintage Classic Vehicle Records MSI Installer
-          path: release/msi/*.msi
           if-no-files-found: error

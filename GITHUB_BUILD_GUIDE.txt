@@ -2,9 +2,9 @@ GITHUB ACTIONS — VERSION 7.1
 
 1. Upload all project files to the repository root.
 2. Open Actions.
-3. Select Build Windows Editions.
+3. Select Build Version 7.1 Windows Setup.
 4. Click Run workflow.
-5. Choose installer, portable, or both.
-6. Download the required artifact after the green tick.
+5. Run the workflow.
+6. Download the setup EXE artifact after the green tick.
 
-A push to main builds both editions automatically.
+A push to main builds the setup EXE automatically.

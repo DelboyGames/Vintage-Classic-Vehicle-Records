@@ -6,7 +6,7 @@ CLEAN GITHUB REPOSITORY UPLOAD — VERSION 7.1
 4. package.json must appear at the repository root.
 5. Keep the hidden .github folder; it contains the build workflow.
 6. Commit the files to the main branch.
-7. Open Actions > Build Windows Editions with USB Creator.
-8. Choose installer, portable, or both.
+7. Open Actions > Build Version 7.1 Windows Setup.
+8. Run the workflow to create the setup EXE.
 
 The official icon is assets/app.ico. Do not rename or move it unless you also update the Electron Builder configuration.

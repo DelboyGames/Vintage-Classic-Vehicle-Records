@@ -36,14 +36,5 @@
     "installerIcon": "assets/app.ico",
     "uninstallerIcon": "assets/app.ico",
     "installerHeaderIcon": "assets/app.ico"
-  },
-  "extraResources": [
-    {
-      "from": "bundled-portable",
-      "to": "portable-runtime",
-      "filter": [
-        "**/*"
-      ]
-    }
-  ]
+  }
 }
