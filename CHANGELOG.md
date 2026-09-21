@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.2.0
+
+- Added launch-time update notifications for the Windows setup build.
+- Added version-aware update checks and release-tag validation.
+- Added GitHub release metadata required by the installed-app updater.
+
 ## 7.1.0
 - Separate vehicle workspaces/windows with remembered window positions.
 - Vehicle collection status categories and restoration progress.

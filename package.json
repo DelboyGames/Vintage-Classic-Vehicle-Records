@@ -1,7 +1,7 @@
 {
   "name": "vintage-classic-car-maintenance-restoration-records",
   "productName": "Vintage & Classic Vehicle Maintenance & Restoration Records – Collector Edition",
-  "version": "7.1.0",
+  "version": "7.2.0",
   "description": "Worldwide Collector Edition with separate vehicle workspaces, vehicle status categories, GitHub bug reporting, automatic updates, themes, dashboards and professional reports.",
   "main": "app/main/main.js",
   "author": "Personal Use",

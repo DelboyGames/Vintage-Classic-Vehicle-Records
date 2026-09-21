@@ -1,12 +1,12 @@
-name: Publish Version 7.1 GitHub Release
+name: Publish Version 7.2 GitHub Release
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag, for example v7.1.0
+        description: Release tag (must be v7.2.0)
         required: true
-        default: v7.1.0
+        default: v7.2.0
 
 permissions:
   contents: write
@@ -22,6 +22,13 @@ jobs:
           package-manager-cache: false
       - run: npm install
       - run: npm run check
+      - name: Verify release tag matches app version
+        env:
+          TAG: ${{ github.event.inputs.tag }}
+        shell: pwsh
+        run: |
+          $version = node -p "require('./package.json').version"
+          if ($env:TAG -ne "v$version") { throw "Release tag must be v$version; received $env:TAG." }
       - name: Build setup EXE
         run: npm run build:setup
       - name: Create GitHub release and upload artifacts

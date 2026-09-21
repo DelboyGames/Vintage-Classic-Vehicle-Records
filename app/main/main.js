@@ -110,6 +110,15 @@ function setupAutoUpdater(){
   autoUpdater.on('update-downloaded',info=>mainWindow?.webContents.send('updates:downloaded',{version:info.version}));
   autoUpdater.on('error',err=>mainWindow?.webContents.send('updates:error',{error:err.message}));
 }
+function isVersionNewer(candidate,current){
+  const parse=value=>String(value||'').replace(/^v/i,'').split('-')[0].split('.').map(part=>Number.parseInt(part,10)||0);
+  const next=parse(candidate), installed=parse(current);
+  for(let index=0;index<Math.max(next.length,installed.length);index+=1){
+    const difference=(next[index]||0)-(installed[index]||0);
+    if(difference!==0)return difference>0;
+  }
+  return false;
+}
 function scheduleStartupUpdateCheck(){
   if(!app.isPackaged)return;
   setTimeout(async()=>{
@@ -256,15 +265,16 @@ ipcMain.handle('usb:open-folder',async(_e,p)=>{const err=await shell.openPath(p)
 function getJson(url){return new Promise((resolve,reject)=>{https.get(url,{headers:{'User-Agent':'VintageClassicVehicleRecords/7.0','Accept':'application/vnd.github+json'}},res=>{let data='';res.on('data',c=>data+=c);res.on('end',()=>{try{if(res.statusCode>=400)throw new Error(`GitHub returned ${res.statusCode}`);resolve(JSON.parse(data));}catch(e){reject(e);}});}).on('error',reject);});}
 function downloadFile(url,dest,onProgress){return new Promise((resolve,reject)=>{const request=https.get(url,{headers:{'User-Agent':'VintageClassicVehicleRecords/7.1','Accept':'application/octet-stream'}},res=>{if(res.statusCode>=300&&res.statusCode<400&&res.headers.location){res.resume();return downloadFile(res.headers.location,dest,onProgress).then(resolve,reject);}if(res.statusCode!==200){res.resume();return reject(new Error(`Download failed with HTTP ${res.statusCode}`));}const total=Number(res.headers['content-length']||0);let transferred=0;const out=fs.createWriteStream(dest);res.on('data',chunk=>{transferred+=chunk.length;onProgress?.(total?Math.min(100,transferred/total*100):0,transferred,total);});res.on('error',reject);out.on('error',reject);out.on('finish',()=>{out.close();resolve(dest);});res.pipe(out);});request.on('error',reject);});}
 ipcMain.handle('app:open-bug-report',async()=>{try{createBugReportWindow();return{ok:true};}catch(e){return{ok:false,error:e.message};}});
-ipcMain.handle('app:open-bug-report',async()=>{try{createBugReportWindow();return{ok:true};}catch(e){return{ok:false,error:e.message};}});
 ipcMain.handle('app:open-external',async(_e,url)=>{if(!/^https:\/\//i.test(String(url)))return{ok:false,error:'Only secure web links are allowed'};await shell.openExternal(url);return{ok:true};});
-ipcMain.handle('app:check-updates',async()=>{try{const r=await getJson('https://api.github.com/repos/DelboyGames/Vintage-Classic-Vehicle-Records/releases/latest');const latest=String(r.tag_name||r.name||'').replace(/^v/i,'');if(!isPortableMode){try{await autoUpdater.checkForUpdates();}catch{}}return{ok:true,current:app.getVersion(),latest,url:r.html_url,name:r.name,published:r.published_at,portable:isPortableMode,releaseApi:r.url};}catch(e){return{ok:false,current:app.getVersion(),error:e.message,portable:isPortableMode};}});
+ipcMain.handle('app:check-updates',async()=>{try{const r=await getJson('https://api.github.com/repos/DelboyGames/Vintage-Classic-Vehicle-Records/releases/latest');const latest=String(r.tag_name||r.name||'').replace(/^v/i,'');return{ok:true,current:app.getVersion(),latest,updateAvailable:isVersionNewer(latest,app.getVersion()),url:r.html_url,name:r.name,published:r.published_at,portable:isPortableMode,releaseApi:r.url};}catch(e){return{ok:false,current:app.getVersion(),error:e.message,portable:isPortableMode};}});
 ipcMain.handle('app:create-bug-report',async(_e,payload)=>{try{const d=payload.includeDiagnostics?await (async()=>{const result=db.exec('PRAGMA integrity_check');return{appVersion:app.getVersion(),electron:process.versions.electron,windows:`${process.platform} ${process.arch}`,integrity:result?.[0]?.values?.[0]?.[0]||'unknown',schema:6};})():null;const body=[`## Description\n${payload.description||''}`,`## Steps to reproduce\n${payload.steps||''}`,`## Expected result\n${payload.expected||''}`,`## Actual result\n${payload.actual||''}`,d?`## Diagnostics\n\`\`\`json\n${JSON.stringify(d,null,2)}\n\`\`\``:'',`## Privacy confirmation\nNo vehicle records, photographs, documents, addresses, registration numbers or database files are attached automatically.`].filter(Boolean).join('\n\n');const params=new URLSearchParams({title:`[Bug] ${payload.title||'Issue in Collector Edition'}`,body,labels:'bug'});const url=`https://github.com/DelboyGames/Vintage-Classic-Vehicle-Records/issues/new?${params.toString()}`;await shell.openExternal(url);return{ok:true,url};}catch(e){return{ok:false,error:e.message};}});
 ipcMain.handle('vehicle:open-window',async(_e,vehicleId)=>{try{if(!vehicleId)throw new Error('Vehicle ID is required');createVehicleWindow(String(vehicleId));return{ok:true};}catch(e){return{ok:false,error:e.message};}});
 ipcMain.handle('app:update-install',async()=>{
   try{
     if(!isPortableMode){
       if(!app.isPackaged)return{ok:false,error:'Updates are only available in the installed build.'};
+      const check=await autoUpdater.checkForUpdates();
+      if(!isVersionNewer(check?.updateInfo?.version,app.getVersion()))return{ok:true,mode:'none',message:'No Update Available'};
       await autoUpdater.downloadUpdate();
       return{ok:true,mode:'installed',downloadStarted:true};
     }

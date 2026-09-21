@@ -1,4 +1,4 @@
-name: Build Version 7.1 Windows Setup
+name: Build Version 7.2 Windows Setup
 
 on:
   workflow_dispatch:
