@@ -10,6 +10,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   release:
@@ -31,6 +33,11 @@ jobs:
           if ($env:TAG -ne "v$version") { throw "Release tag must be v$version; received $env:TAG." }
       - name: Build setup EXE
         run: npm run build:setup
+      - name: Generate free GitHub artifact attestation
+        uses: actions/attest@v4
+        with:
+          subject-path: 'release/installer/*.exe'
+
       - name: Create GitHub release and upload artifacts
         env:
           GH_TOKEN: ${{ github.token }}
