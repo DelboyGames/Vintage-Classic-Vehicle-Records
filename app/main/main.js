@@ -115,7 +115,7 @@ function scheduleStartupUpdateCheck(){
   setTimeout(async()=>{
     try{
       if(isPortableMode){
-        const r=await getJson('https://api.github.com/repos/DelboyGames/vintage-classic-car-records/releases/latest');
+        const r=await getJson('https://api.github.com/repos/DelboyGames/Vintage-Classic-Vehicle-Records/releases/latest');
         const latest=String(r.tag_name||r.name||'').replace(/^v/i,'');
         if(latest && latest!==app.getVersion()) mainWindow?.webContents.send('updates:startup-available',{version:latest,url:r.html_url||null});
         else mainWindow?.webContents.send('updates:startup-not-available',{version:app.getVersion()});
